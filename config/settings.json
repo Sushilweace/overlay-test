@@ -1,6 +1,6 @@
 {
   "mode": "meeting",
-  "maxWords": 90,
+  "maxWords": 150,
   "tone": "spoken",
   "language": "auto"
 }

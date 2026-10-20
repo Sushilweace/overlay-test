@@ -1,0 +1,6 @@
+{
+  "mode": "meeting",
+  "maxWords": 90,
+  "tone": "spoken",
+  "language": "auto"
+}

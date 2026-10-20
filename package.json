@@ -1,0 +1,17 @@
+{
+  "name": "overlay-assistant",
+  "version": "1.0.0",
+  "description": "Floating overlay meeting assistant with live Deepgram transcription and Anthropic AI assistance",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "@deepgram/sdk": "^3.11.1",
+    "dotenv": "^16.4.7"
+  },
+  "devDependencies": {
+    "electron": "^31.7.7"
+  }
+}

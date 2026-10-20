@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Meeting Assistant Overlay</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Header Bar -->
+  <header class="app-header">
+    <div class="app-title">
+      <span>🎙️ Meeting Notes</span>
+      <div class="badges">
+        <span id="listeningBadge" class="badge badge-listening">IDLE</span>
+        <span id="contextBadge" class="badge badge-context" title="Ctrl+Shift+G cycles language">AUTO · MEETING</span>
+        <span id="protectionBadge" class="badge badge-protection" title="Click to toggle screen capture protection">PROTECTED</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button id="settingsBtn" class="icon-btn window-btn" title="Gemini key and live answers">⚙</button>
+      <button id="minimizeBtn" class="icon-btn window-btn" title="Minimize">−</button>
+      <button id="closeBtn" class="icon-btn window-btn" title="Quit (Ctrl+Shift+Q)">✕</button>
+    </div>
+  </header>
+
+  <!-- Ethical Consent Banner -->
+  <div id="consentBanner" class="consent-banner">
+    <div><strong>Consent Notice:</strong> Please notify all meeting participants before recording or transcribing. Do not use in proctored exams, interviews, or assessments where AI assistance is prohibited.</div>
+    <button id="acceptConsentBtn">I Understand & Agree</button>
+  </div>
+
+  <!-- Error Notification Banner -->
+  <div id="errorBanner" class="error-banner"></div>
+  <p id="contextWarning" class="context-warning hidden"></p>
+
+  <section id="settingsPanel" class="settings-panel hidden">
+    <label for="geminiKeyInput">Gemini API key</label>
+    <div class="settings-row">
+      <input id="geminiKeyInput" type="password" placeholder="Paste Gemini API key" autocomplete="off" spellcheck="false">
+      <button id="toggleGeminiKeyBtn" class="btn" type="button">Show</button>
+      <button id="saveGeminiKeyBtn" class="btn btn-primary" type="button">Save</button>
+    </div>
+    <p id="geminiKeyStatus" class="settings-status">No Gemini key yet</p>
+    <label class="settings-check">
+      <input id="liveAnswersToggle" type="checkbox" checked>
+      Real-time answers as you speak
+    </label>
+    <p id="settingsHint" class="settings-hint">Answers use your resume and the Gemini model from .env.</p>
+  </section>
+
+  <!-- Controls Toolbar -->
+  <div class="toolbar">
+    <div class="audio-controls">
+      <select id="audioSourceSelect">
+        <option value="mic">Microphone only</option>
+        <option value="system">Meeting call (system audio)</option>
+        <option value="mixed">Microphone + meeting call</option>
+      </select>
+      <button id="toggleListeningBtn" class="btn btn-primary">Start Listening</button>
+    </div>
+    <div class="action-row">
+      <button id="aiSuggestBtn" class="btn" title="Shortcut: Ctrl+Shift+A">💡 Suggestion</button>
+      <button id="summarizeBtn" class="btn" title="Shortcut: Ctrl+Shift+S">📋 Summary</button>
+      <button id="clearBtn" class="btn">Clear</button>
+    </div>
+    <div class="opacity-row">
+      <label for="opacitySlider">Transparency</label>
+      <input id="opacitySlider" type="range" min="0" max="80" value="8">
+      <span id="opacityValue">8%</span>
+    </div>
+  </div>
+
+  <!-- Main Content: Transcript & AI Panels -->
+  <main class="content-area">
+    <section class="panel-section ai-panel">
+      <div class="panel-header">
+        <span>AI Assistance <small id="aiProviderLabel">· add a key</small></span>
+        <button id="copyAiBtn" class="icon-btn" title="Copy AI output">📋</button>
+      </div>
+      <div id="aiBox" class="scroll-box ai-box empty">Add a Gemini key with the gear icon for live answers, or press Suggestion.</div>
+    </section>
+
+    <section class="panel-section transcript-panel">
+      <div class="panel-header">
+        <span>Live Transcript</span>
+        <small id="wordCount">0 words</small>
+      </div>
+      <div id="transcriptBox" class="scroll-box">
+        <div id="transcriptHistory"></div>
+        <div id="interimTranscript" class="transcript-interim"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer Shortcuts Help -->
+  <footer class="footer-bar">
+    <span>Ctrl+Shift+G: Language</span>
+    <span>Ctrl+Shift+A: Suggest</span>
+    <span>Ctrl+Shift+H: Hide</span>
+    <span>Ctrl+Shift+P: Protect</span>
+  </footer>
+
+  <script src="audio-recorder.js"></script>
+  <script src="renderer.js"></script>
+</body>
+</html>

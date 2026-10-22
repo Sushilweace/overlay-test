@@ -5,6 +5,7 @@
 const {
   suggestionSystemPrompt,
   suggestionUserContent,
+  questionUserContent,
   summarySystemPrompt,
   summaryUserContent
 } = require('./answer-profile');
@@ -66,6 +67,23 @@ class GeminiService {
     });
   }
 
+  streamQuestion(question, recentTranscript, onChunk, onComplete, onError, systemPrompt, image) {
+    const parts = [{
+      text: questionUserContent(question, recentTranscript, Boolean(image))
+    }];
+    if (image) {
+      parts.push({ inlineData: { mimeType: image.mimeType, data: image.data } });
+    }
+    return this.streamText({
+      systemPrompt: systemPrompt || suggestionSystemPrompt(),
+      userParts: parts,
+      maxOutputTokens: 320,
+      onChunk,
+      onComplete,
+      onError
+    });
+  }
+
   streamSummary(fullTranscript, onChunk, onComplete, onError, systemPrompt) {
     return this.streamText({
       systemPrompt: systemPrompt || summarySystemPrompt(),
@@ -77,7 +95,7 @@ class GeminiService {
     });
   }
 
-  async streamText({ systemPrompt, userContent, maxOutputTokens, onChunk, onComplete, onError }) {
+  async streamText({ systemPrompt, userContent, userParts, maxOutputTokens, onChunk, onComplete, onError }) {
     const controller = new AbortController();
     this.cancel();
     this.controller = controller;
@@ -94,7 +112,7 @@ class GeminiService {
 
       const body = {
         systemInstruction: { parts: [{ text: systemPrompt }] },
-        contents: [{ role: 'user', parts: [{ text: userContent }] }],
+        contents: [{ role: 'user', parts: userParts || [{ text: userContent }] }],
         generationConfig: this.generationConfig(maxOutputTokens)
       };
 

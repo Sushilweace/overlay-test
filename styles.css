@@ -41,7 +41,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 14px;
+  gap: 6px;
+  padding: 6px 8px;
   background: rgba(0, 0, 0, 0.25);
   border-bottom: 1px solid var(--border-color);
 }
@@ -49,25 +50,36 @@ body {
 .app-title {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 13px;
+  gap: 6px;
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.2px;
+}
+
+.app-title > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .badges {
   display: flex;
-  gap: 6px;
+  gap: 4px;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .badge {
-  font-size: 10px;
+  font-size: 8px;
   font-weight: 700;
-  padding: 2px 7px;
+  padding: 1px 5px;
   border-radius: 10px;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
 }
 
 .badge-listening {
@@ -115,7 +127,15 @@ body {
 .header-actions {
   -webkit-app-region: no-drag;
   display: flex;
-  gap: 6px;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.header-actions .btn {
+  padding: 4px 8px;
+  font-size: 10px;
+  white-space: nowrap;
 }
 
 .icon-btn {
@@ -270,20 +290,40 @@ body {
   display: none;
 }
 
-/* Controls Toolbar */
-.toolbar {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 10px 14px;
-  border-bottom: 1px solid var(--border-color);
-  background: rgba(0, 0, 0, 0.1);
+.footer-toggle {
+  flex-shrink: 0;
+  border: none;
+  border-top: 1px solid var(--border-color);
+  background: rgba(0, 0, 0, 0.28);
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  cursor: pointer;
 }
 
-.audio-controls {
+.footer-toggle:hover {
+  color: var(--text-main);
+}
+
+.bottom-bar {
   display: flex;
-  gap: 8px;
-  align-items: center;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px 0;
+  border-top: 1px solid var(--border-color);
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.bottom-bar.hidden {
+  display: none;
+}
+
+.bottom-bar select {
+  flex: none;
+  width: 100%;
 }
 
 select {
@@ -305,6 +345,11 @@ select option {
 .action-row {
   display: flex;
   gap: 6px;
+}
+
+.action-row .btn {
+  flex: 1;
+  justify-content: center;
 }
 
 .opacity-row {
@@ -398,6 +443,7 @@ button.btn-danger {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-height: 0;
 }
 
 .transcript-panel {
@@ -405,13 +451,22 @@ button.btn-danger {
 }
 
 .ai-panel {
+  position: relative;
   flex: 1.5;
   padding-bottom: 8px;
   border-bottom: 1px solid var(--border-color);
 }
 
+.copy-ai-btn {
+  position: absolute;
+  top: 2px;
+  right: 8px;
+  z-index: 2;
+}
+
 .scroll-box {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   user-select: text;
   background: rgba(0, 0, 0, 0.2);
@@ -420,6 +475,13 @@ button.btn-danger {
   padding: 8px 10px;
   font-size: 12px;
   line-height: 1.5;
+}
+
+.word-count {
+  float: right;
+  margin-left: 8px;
+  color: var(--text-muted);
+  font-size: 10px;
 }
 
 .scroll-box::-webkit-scrollbar {
@@ -463,13 +525,101 @@ button.btn-danger {
   box-shadow: inset 2px 0 0 var(--accent-color);
 }
 
+.chat-msg {
+  margin-bottom: 10px;
+  word-break: break-word;
+}
+
+.chat-label {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.chat-user .chat-body {
+  color: #bae6fd;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.chat-assistant .chat-body {
+  color: #f8fafc;
+  font-size: 15px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.chat-error .chat-body {
+  color: #fecaca;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.question-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.question-row input {
+  flex: 1;
+  min-width: 0;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  border-radius: 6px;
+  padding: 7px 8px;
+  font-size: 12px;
+  outline: none;
+  user-select: text;
+}
+
+.question-row input:focus {
+  border-color: var(--accent-color);
+}
+
+.image-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.image-preview.hidden {
+  display: none;
+}
+
+.image-preview img,
+.chat-image {
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+}
+
+.image-preview img {
+  width: 72px;
+  height: 48px;
+}
+
+.chat-image {
+  display: block;
+  max-width: 180px;
+  max-height: 110px;
+  margin-top: 4px;
+}
+
 /* Footer Shortcuts info */
 .footer-bar {
-  padding: 6px 14px;
+  margin: 0 -10px;
+  padding: 6px 10px;
   border-top: 1px solid var(--border-color);
-  background: rgba(0, 0, 0, 0.3);
-  font-size: 10px;
+  font-size: 9px;
   color: var(--text-muted);
   display: flex;
   justify-content: space-between;
+  gap: 6px;
 }

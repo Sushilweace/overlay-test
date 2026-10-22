@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld('meetingAssistant', {
   stopListening: () => ipcRenderer.invoke('stop-listening'),
   sendAudioChunk: (arrayBuffer) => ipcRenderer.send('audio-chunk', arrayBuffer),
   requestAiSuggestion: () => ipcRenderer.invoke('request-ai-suggestion'),
+  askQuestion: (question) => ipcRenderer.invoke('ask-question', question),
   requestSummary: () => ipcRenderer.invoke('request-summary'),
   toggleProtection: () => ipcRenderer.invoke('toggle-protection'),
   getProtectionState: () => ipcRenderer.invoke('get-protection-state'),

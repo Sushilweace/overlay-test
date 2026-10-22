@@ -13,7 +13,9 @@ const saveGeminiKeyBtn = document.getElementById('saveGeminiKeyBtn');
 const geminiKeyStatus = document.getElementById('geminiKeyStatus');
 const settingsHint = document.getElementById('settingsHint');
 const liveAnswersToggle = document.getElementById('liveAnswersToggle');
-const aiProviderLabel = document.getElementById('aiProviderLabel');
+const imagePreview = document.getElementById('imagePreview');
+const imagePreviewImg = document.getElementById('imagePreviewImg');
+const clearImageBtn = document.getElementById('clearImageBtn');
 const consentBanner = document.getElementById('consentBanner');
 const acceptConsentBtn = document.getElementById('acceptConsentBtn');
 const errorBanner = document.getElementById('errorBanner');
@@ -28,11 +30,18 @@ const interimTranscript = document.getElementById('interimTranscript');
 const wordCountEl = document.getElementById('wordCount');
 const aiBox = document.getElementById('aiBox');
 const copyAiBtn = document.getElementById('copyAiBtn');
+const questionForm = document.getElementById('questionForm');
+const questionInput = document.getElementById('questionInput');
+const askBtn = document.getElementById('askBtn');
+const footerBar = document.querySelector('.bottom-bar');
+const footerToggleBtn = document.getElementById('footerToggleBtn');
 
 let isCurrentlyListening = false;
 let totalWordCount = 0;
 let liveAnswersEnabled = true;
-let replaceOnNextChunk = false;
+let activeAnswerEl = null;
+let pendingImage = null;
+const emptyAnswerText = 'Type a question below, or finish a sentence while listening.';
 
 // Audio Recorder Instance
 const recorder = new AudioRecorder((chunk) => {
@@ -81,38 +90,116 @@ async function toggleListening() {
 
 toggleListeningBtn.addEventListener('click', toggleListening);
 
+function setFooterVisible(visible) {
+  footerBar.classList.toggle('hidden', !visible);
+  footerToggleBtn.textContent = visible ? 'Hide footer' : 'Show footer';
+  footerToggleBtn.title = visible ? 'Hide the bottom controls' : 'Show the bottom controls';
+  localStorage.setItem('footerVisible', visible ? 'true' : 'false');
+}
+
+footerToggleBtn.addEventListener('click', () => {
+  setFooterVisible(footerBar.classList.contains('hidden'));
+});
+
+setFooterVisible(localStorage.getItem('footerVisible') !== 'false');
+
 // Clear Transcripts & AI Output
 clearBtn.addEventListener('click', () => {
   transcriptHistory.innerHTML = '';
   interimTranscript.textContent = '';
   totalWordCount = 0;
   wordCountEl.textContent = '0 words';
-  aiBox.textContent = 'Ready for suggestions or summary.';
-  aiBox.classList.add('empty');
-  finishAnswerStream();
+  resetAnswerChat(emptyAnswerText);
   window.meetingAssistant.clearSession();
 });
 
+questionInput.addEventListener('paste', async (event) => {
+  const imageItem = [...(event.clipboardData?.items || [])].find((item) => item.type.startsWith('image/'));
+  if (!imageItem) return;
+  event.preventDefault();
+  const file = imageItem.getAsFile();
+  if (!file) return;
+  try {
+    pendingImage = await fileToImagePayload(file);
+    imagePreviewImg.src = pendingImage.preview;
+    imagePreview.classList.remove('hidden');
+  } catch (err) {
+    pendingImage = null;
+    showError(err.message);
+  }
+});
+
+clearImageBtn.addEventListener('click', () => {
+  pendingImage = null;
+  imagePreviewImg.removeAttribute('src');
+  imagePreview.classList.add('hidden');
+  questionInput.focus();
+});
+
+questionForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const question = questionInput.value.trim();
+  const image = pendingImage;
+  if (!question && !image) return;
+
+  questionInput.value = '';
+  addChatMessage('user', 'You', question, image ? image.preview : '');
+  pendingImage = null;
+  imagePreviewImg.removeAttribute('src');
+  imagePreview.classList.add('hidden');
+  askBtn.disabled = true;
+  try {
+    await window.meetingAssistant.askQuestion({
+      question,
+      image: image ? { mimeType: image.mimeType, data: image.data } : null
+    });
+  } catch (err) {
+    showError(err.message);
+    addChatMessage('error', 'Error', err.message);
+  } finally {
+    askBtn.disabled = false;
+    questionInput.focus();
+  }
+});
+
+function fileToImagePayload(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Could not read that image.'));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('Could not read that image.'));
+      img.onload = () => {
+        const scale = Math.min(1, 1280 / img.width, 1280 / img.height);
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(img.width * scale));
+        canvas.height = Math.max(1, Math.round(img.height * scale));
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        const preview = canvas.toDataURL('image/jpeg', 0.82);
+        resolve({ mimeType: 'image/jpeg', data: preview.split(',')[1], preview });
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 // AI Suggestion & Summary Actions
 aiSuggestBtn.addEventListener('click', async () => {
-  aiBox.classList.remove('empty');
-  aiBox.textContent = 'Generating AI suggestion...';
   await window.meetingAssistant.requestAiSuggestion();
 });
 
 summarizeBtn.addEventListener('click', async () => {
-  aiBox.classList.remove('empty');
-  aiBox.textContent = 'Generating meeting summary...';
   await window.meetingAssistant.requestSummary();
 });
 
 // Copy Output
 copyAiBtn.addEventListener('click', () => {
-  if (!aiBox.classList.contains('empty') && aiBox.textContent) {
-    navigator.clipboard.writeText(aiBox.textContent);
-    copyAiBtn.textContent = '✓';
-    setTimeout(() => { copyAiBtn.textContent = '📋'; }, 1500);
-  }
+  const text = chatText();
+  if (!text) return;
+  navigator.clipboard.writeText(text);
+  copyAiBtn.textContent = '✓';
+  setTimeout(() => { copyAiBtn.textContent = '📋'; }, 1500);
 });
 
 // Protection Badge Toggle
@@ -189,17 +276,11 @@ function applyAiSettings(settings) {
   }
 
   if (aiBox.classList.contains('empty')) {
-    aiBox.textContent = settings.hasGeminiKey && settings.liveAnswers
-      ? 'A short answer appears here after you finish a sentence.'
-      : settings.hasGeminiKey
-        ? 'Press Suggestion for an answer.'
-        : 'Add a Gemini key with the gear icon for live answers, or press Suggestion.';
+    aiBox.textContent = settings.hasGeminiKey
+      ? emptyAnswerText
+      : 'Add a Gemini key with the gear icon, or type a question below.';
   }
 
-  if (settings.hasGeminiKey && settings.liveAnswers) aiProviderLabel.textContent = '· Gemini live';
-  else if (settings.hasGeminiKey) aiProviderLabel.textContent = '· Gemini';
-  else if (settings.hasAnthropicKey) aiProviderLabel.textContent = '· Claude';
-  else aiProviderLabel.textContent = '· add a key';
 }
 
 async function saveGeminiKey() {
@@ -264,29 +345,62 @@ window.meetingAssistant.onTranscript(({ text, isFinal }) => {
   }
 });
 
-let isReceivingStream = false;
+function resetAnswerChat(message) {
+  activeAnswerEl = null;
+  aiBox.classList.add('empty');
+  aiBox.classList.remove('pending');
+  aiBox.textContent = message;
+}
+
+function chatText() {
+  return [...aiBox.querySelectorAll('.chat-msg')].map((el) => el.innerText.trim()).filter(Boolean).join('\n\n');
+}
+
+function addChatMessage(kind, label, text, imageSrc) {
+  if (aiBox.classList.contains('empty')) {
+    aiBox.textContent = '';
+    aiBox.classList.remove('empty');
+  }
+  const message = document.createElement('div');
+  message.className = `chat-msg chat-${kind}`;
+  const labelEl = document.createElement('span');
+  labelEl.className = 'chat-label';
+  labelEl.textContent = label;
+  const body = document.createElement('div');
+  body.className = 'chat-body';
+  body.textContent = text || '';
+  message.append(labelEl, body);
+  if (imageSrc) {
+    const img = document.createElement('img');
+    img.className = 'chat-image';
+    img.alt = 'Pasted image';
+    img.src = imageSrc;
+    message.appendChild(img);
+  }
+  aiBox.appendChild(message);
+  aiBox.scrollTop = aiBox.scrollHeight;
+  return body;
+}
 
 function beginAnswerStream() {
-  replaceOnNextChunk = true;
+  activeAnswerEl = addChatMessage('assistant', 'Answer', '');
+  activeAnswerEl.parentElement.classList.add('pending');
   aiBox.classList.add('pending');
 }
 
 function appendAnswerChunk(chunk) {
-  const starting = replaceOnNextChunk || !isReceivingStream;
-  if (starting) {
-    aiBox.textContent = '';
-    aiBox.classList.remove('empty');
-    isReceivingStream = true;
-    replaceOnNextChunk = false;
-  }
+  if (!activeAnswerEl) beginAnswerStream();
+  activeAnswerEl.parentElement.classList.remove('pending');
   aiBox.classList.remove('pending');
-  aiBox.textContent += chunk;
-  if (starting) aiBox.scrollTop = 0;
+  activeAnswerEl.textContent += chunk;
+  aiBox.scrollTop = aiBox.scrollHeight;
 }
 
 function finishAnswerStream() {
-  isReceivingStream = false;
-  replaceOnNextChunk = false;
+  if (activeAnswerEl && activeAnswerEl.parentElement) {
+    activeAnswerEl.parentElement.classList.remove('pending');
+  }
+  activeAnswerEl = null;
   aiBox.classList.remove('pending');
 }
 
@@ -305,9 +419,16 @@ window.meetingAssistant.onProtectionChange((isProtected) => {
 
 window.meetingAssistant.onError((msg) => {
   showError(msg);
+  if (activeAnswerEl && !activeAnswerEl.textContent) {
+    activeAnswerEl.textContent = msg;
+    activeAnswerEl.parentElement.classList.remove('pending');
+    activeAnswerEl.parentElement.classList.add('chat-error');
+    activeAnswerEl = null;
+    aiBox.classList.remove('pending');
+    return;
+  }
   finishAnswerStream();
-  aiBox.textContent = msg;
-  aiBox.classList.remove('empty');
+  addChatMessage('error', 'Error', msg);
 });
 
 const opacitySlider = document.getElementById('opacitySlider');

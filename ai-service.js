@@ -2,6 +2,7 @@ const Anthropic = require('@anthropic-ai/sdk');
 const {
   suggestionSystemPrompt,
   suggestionUserContent,
+  questionUserContent,
   summarySystemPrompt,
   summaryUserContent
 } = require('./answer-profile');
@@ -35,6 +36,35 @@ class AiService {
       const client = this.ensureClient();
       systemPrompt = systemPrompt || suggestionSystemPrompt();
       const userContent = suggestionUserContent(recentTranscript);
+
+      const stream = await client.messages.stream({
+        model: this.modelName,
+        max_tokens: 350,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userContent }]
+      });
+
+      for await (const event of stream) {
+        if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
+          onChunk(event.delta.text);
+        }
+      }
+
+      onComplete();
+    } catch (err) {
+      if (onError) onError(err);
+    }
+  }
+
+  async streamQuestion(question, recentTranscript, onChunk, onComplete, onError, systemPrompt, image) {
+    if (image) {
+      if (onError) onError(new Error('Pasted images need a Gemini key.'));
+      return;
+    }
+    try {
+      const client = this.ensureClient();
+      systemPrompt = systemPrompt || suggestionSystemPrompt();
+      const userContent = questionUserContent(question, recentTranscript);
 
       const stream = await client.messages.stream({
         model: this.modelName,

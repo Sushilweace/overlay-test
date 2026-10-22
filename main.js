@@ -30,7 +30,7 @@ const geminiService = new GeminiService(process.env.GEMINI_API_KEY, process.env.
 function createWindow() {
   win = new BrowserWindow({
     width: 480,
-    height: 620,
+    height: 680,
     minWidth: 360,
     minHeight: 400,
     x: 80,
@@ -373,6 +373,62 @@ async function triggerLiveAnswer() {
   );
 }
 
+function normalizeQuestionImage(image) {
+  if (!image) return null;
+  const mimeType = String(image.mimeType || '');
+  const data = String(image.data || '').replace(/\s/g, '');
+  if (!mimeType && !data) return null;
+  if (!/^image\/(png|jpeg|webp|gif)$/.test(mimeType) || !/^[A-Za-z0-9+/=]+$/.test(data)) {
+    throw new Error('That image could not be read. Paste a screenshot or photo.');
+  }
+  if (data.length > 1500000) {
+    throw new Error('That image is too large. Paste a smaller screenshot.');
+  }
+  return { mimeType, data };
+}
+
+async function triggerQuestion(payload) {
+  if (!win) return;
+  const raw = payload && typeof payload === 'object' ? payload : { question: payload };
+  const cleaned = String(raw.question || '').replace(/\s+/g, ' ').trim().slice(0, 500);
+  let image = null;
+  try {
+    image = normalizeQuestionImage(raw.image);
+  } catch (err) {
+    sendAiError(err);
+    return;
+  }
+  if (!cleaned && !image) {
+    sendAiError(new Error('Type a question or paste an image.'));
+    return;
+  }
+
+  clearTimeout(liveTimer);
+  const service = pickAiService();
+  if (!service) {
+    sendAiError(missingKeyError());
+    return;
+  }
+
+  blockLive = true;
+  lastAnsweredText = '';
+  if (typeof service.cancel === 'function') service.cancel();
+  try {
+    win.webContents.send('ai-suggestion-start');
+    await service.streamQuestion(
+      cleaned,
+      getRecentTranscriptText(),
+      (chunk) => { if (win) win.webContents.send('ai-suggestion-chunk', chunk); },
+      () => { if (win) win.webContents.send('ai-suggestion-complete'); },
+      (err) => sendAiError(err),
+      buildSystemPrompt('answer'),
+      image
+    );
+  } finally {
+    blockLive = false;
+  }
+}
+
 async function triggerAiSuggestion() {
   if (!win) return;
   clearTimeout(liveTimer);
@@ -466,6 +522,7 @@ function setupIpcHandlers() {
   });
 
   ipcMain.handle('request-ai-suggestion', async () => triggerAiSuggestion());
+  ipcMain.handle('ask-question', async (_event, question) => triggerQuestion(question));
   ipcMain.handle('request-summary', async () => triggerAiSummary());
 
   ipcMain.handle('get-ai-settings', () => currentAiSettings());

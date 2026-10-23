@@ -9,6 +9,9 @@ resume.md
 # Node modules
 node_modules/
 
+# Packaged desktop app
+dist/
+
 # Logs
 npm-debug.log*
 yarn-debug.log*

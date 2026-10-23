@@ -1,7 +1,13 @@
 const fs = require('fs');
 const path = require('path');
 const { app, BrowserWindow, globalShortcut, ipcMain, desktopCapturer, session } = require('electron');
-require('dotenv').config();
+
+function envFilePath() {
+  if (app.isPackaged) return path.join(path.dirname(process.execPath), '.env');
+  return path.join(__dirname, '.env');
+}
+
+require('dotenv').config({ path: envFilePath() });
 
 const DeepgramService = require('./deepgram-service');
 const AiService = require('./ai-service');
@@ -257,7 +263,7 @@ function currentAiSettings() {
 }
 
 function readEnvFile() {
-  const envPath = path.join(__dirname, '.env');
+  const envPath = envFilePath();
   let content = '';
   try {
     content = fs.readFileSync(envPath, 'utf8');
@@ -302,7 +308,7 @@ function applyEnvFile() {
 }
 
 function upsertEnvVar(key, value) {
-  const envPath = path.join(__dirname, '.env');
+  const envPath = envFilePath();
   let content = '';
   try {
     content = fs.readFileSync(envPath, 'utf8');

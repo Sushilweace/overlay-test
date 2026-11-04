@@ -12,14 +12,14 @@
       <span>🎙️ Meeting Notes</span>
       <div class="badges">
         <span id="listeningBadge" class="badge badge-listening">IDLE</span>
-        <span id="contextBadge" class="badge badge-context" title="Ctrl+Shift+G cycles language">AUTO · MEETING</span>
+        <span id="contextBadge" class="badge badge-context" title="Click or Ctrl+Shift+G to cycle language (English / Hinglish / Auto)">AUTO · MEETING</span>
         <span id="protectionBadge" class="badge badge-protection" title="Click to toggle screen capture protection">PROTECTED</span>
       </div>
     </div>
     <div class="header-actions">
       <button id="toggleListeningBtn" class="btn btn-primary">Start Listening</button>
       <button id="clearBtn" class="btn">Clear</button>
-      <button id="settingsBtn" class="icon-btn window-btn" title="Gemini key and live answers">⚙</button>
+      <button id="settingsBtn" class="icon-btn window-btn" title="Settings: Model, Key, Language">⚙</button>
       <button id="minimizeBtn" class="icon-btn window-btn" title="Minimize">−</button>
       <button id="closeBtn" class="icon-btn window-btn" title="Quit (Ctrl+Shift+Q)">✕</button>
     </div>
@@ -36,18 +36,46 @@
   <p id="contextWarning" class="context-warning hidden"></p>
 
   <section id="settingsPanel" class="settings-panel hidden">
-    <label for="geminiKeyInput">Gemini API key</label>
-    <div class="settings-row">
-      <input id="geminiKeyInput" type="password" placeholder="Paste Gemini API key" autocomplete="off" spellcheck="false">
-      <button id="toggleGeminiKeyBtn" class="btn" type="button">Show</button>
-      <button id="saveGeminiKeyBtn" class="btn btn-primary" type="button">Save</button>
+    <label for="modelSelect">AI Model (OpenRouter)</label>
+    <select id="modelSelect" class="settings-select">
+      <option value="openai/gpt-4o-mini">GPT-4o Mini (Recommended, Fast & Stable)</option>
+      <option value="meta-llama/llama-3.3-70b-instruct">Llama 3.3 70B (High Quality & Fast)</option>
+      <option value="deepseek/deepseek-chat">DeepSeek Chat (Low Cost)</option>
+      <option value="nvidia/nemotron-3-ultra-550b-a55b:free">Nemotron Ultra 550B (100% Free)</option>
+      <option value="openrouter/free">OpenRouter Free Auto-Router</option>
+      <option value="custom">Custom Model ID...</option>
+    </select>
+    <div id="customModelRow" class="settings-row hidden" style="margin-top: 4px;">
+      <input id="customModelInput" type="text" placeholder="e.g. qwen/qwen-2.5-72b-instruct" autocomplete="off" spellcheck="false">
+      <button id="saveCustomModelBtn" class="btn btn-primary" type="button">Set</button>
     </div>
-    <p id="geminiKeyStatus" class="settings-status">No Gemini key yet</p>
+
+    <div class="settings-separator"></div>
+
+    <label for="languageSelect">Answer Language Mode</label>
+    <select id="languageSelect" class="settings-select">
+      <option value="en">English (Professional, Spoken)</option>
+      <option value="hinglish">Hinglish (Conversational Hindi + English tech terms)</option>
+      <option value="auto">Auto (Match the speaker)</option>
+    </select>
+
+    <div class="settings-separator"></div>
+
+    <label for="openrouterKeyInput">OpenRouter API Key</label>
+    <div class="settings-row">
+      <input id="openrouterKeyInput" type="password" placeholder="Paste OpenRouter API key" autocomplete="off" spellcheck="false">
+      <button id="toggleOpenRouterKeyBtn" class="btn" type="button">Show</button>
+      <button id="saveOpenRouterKeyBtn" class="btn btn-primary" type="button">Save</button>
+    </div>
+    <p id="openrouterKeyStatus" class="settings-status">No OpenRouter key yet</p>
+
+    <div class="settings-separator"></div>
+
     <label class="settings-check">
       <input id="liveAnswersToggle" type="checkbox" checked>
       Real-time answers as you speak
     </label>
-    <p id="settingsHint" class="settings-hint">Answers use your resume and the Gemini model from .env.</p>
+    <p id="settingsHint" class="settings-hint">Answers use your profile, WeAce project knowledge, and the active OpenRouter model.</p>
   </section>
 
   <!-- Main Content: Transcript & AI Panels -->

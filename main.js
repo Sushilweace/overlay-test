@@ -11,7 +11,7 @@ require('dotenv').config({ path: envFilePath() });
 
 const DeepgramService = require('./deepgram-service');
 const AiService = require('./ai-service');
-const GeminiService = require('./gemini-service');
+const OpenRouterService = require('./openrouter-service');
 const { loadResume } = require('./answer-profile');
 
 let win;
@@ -31,7 +31,7 @@ function isTruthy(value) {
 
 const deepgramService = new DeepgramService(process.env.DEEPGRAM_API_KEY);
 const aiService = new AiService(process.env.ANTHROPIC_API_KEY, process.env.ANTHROPIC_MODEL);
-const geminiService = new GeminiService(process.env.GEMINI_API_KEY, process.env.GEMINI_MODEL);
+const openRouterService = new OpenRouterService(process.env.OPENROUTER_API_KEY, process.env.OPENROUTER_MODEL);
 
 function createWindow() {
   win = new BrowserWindow({
@@ -124,12 +124,11 @@ function buildLivePromptText() {
   return `Earlier context:\n${priorClip || '(none)'}\n\nLatest line to answer now:\n${latest}`;
 }
 
-const LANGUAGE_ORDER = ['auto', 'en', 'hi', 'hinglish'];
+const LANGUAGE_ORDER = ['en', 'hinglish', 'auto'];
 const LANGUAGE_RULES = {
-  auto: 'Match the language of the latest line I need to answer. If that line mixes Hindi and English, answer in Hinglish.',
-  en: 'Answer only in English.',
-  hi: 'Answer only in Hindi, using Devanagari.',
-  hinglish: 'Answer in Hinglish: Hindi mixed with English words, written in Latin script.'
+  en: 'Answer only in clear, conversational English. Keep technical words precise and direct.',
+  hinglish: 'Answer in natural conversational Hinglish: speak in Hindi sentence structure written in Latin script (e.g. "Humne WeAce me API Gateway ke through..."), but keep ALL technical terms, architectural concepts, tool names, and metrics strictly in English (e.g. "microservices", "TCP transport", "JWT token", "indexing", "MongoDB", "payload").',
+  auto: 'Match the language of the latest line I need to answer. If that line mixes Hindi and English or is spoken in Hindi, answer in Hinglish. Otherwise answer in English.'
 };
 const MODE_RULES = {
   meeting: 'Help me speak in a live work meeting.',
@@ -221,9 +220,8 @@ function buildSystemPrompt(kind = 'answer') {
   return sections.join('\n\n');
 }
 
-function cycleLanguage() {
-  const settings = readAssistantSettings();
-  const next = LANGUAGE_ORDER[(LANGUAGE_ORDER.indexOf(settings.language) + 1) % LANGUAGE_ORDER.length];
+function setLanguage(targetLang) {
+  const next = LANGUAGE_ORDER.includes(targetLang) ? targetLang : 'en';
   const filePath = path.join(configDir(), 'settings.json');
   let stored = {};
   try {
@@ -237,9 +235,29 @@ function cycleLanguage() {
     fs.writeFileSync(filePath, `${JSON.stringify({ ...DEFAULT_ASSISTANT_SETTINGS, ...stored, language: next }, null, 2)}\n`);
   } catch (err) {
     sendAiError(err);
-    return;
+    return currentAiSettings();
   }
-  if (win) win.webContents.send('ai-settings-changed', currentAiSettings());
+  const updated = currentAiSettings();
+  if (win) win.webContents.send('ai-settings-changed', updated);
+  return updated;
+}
+
+function cycleLanguage() {
+  const settings = readAssistantSettings();
+  const next = LANGUAGE_ORDER[(LANGUAGE_ORDER.indexOf(settings.language) + 1) % LANGUAGE_ORDER.length];
+  return setLanguage(next);
+}
+
+function activeProvider() {
+  if (openRouterService.hasKey()) return 'OpenRouter';
+  if (process.env.ANTHROPIC_API_KEY) return 'Anthropic';
+  return 'None';
+}
+
+function activeModel() {
+  if (openRouterService.hasKey()) return openRouterService.model;
+  if (process.env.ANTHROPIC_API_KEY) return process.env.ANTHROPIC_MODEL || 'claude-3-5-haiku-20241022';
+  return '';
 }
 
 function currentAiSettings() {
@@ -247,11 +265,13 @@ function currentAiSettings() {
   const assistant = readAssistantSettings();
   const context = contextBundle();
   return {
-    hasGeminiKey: geminiService.hasKey(),
-    geminiKeyHint: geminiService.hint(),
+    hasOpenRouterKey: openRouterService.hasKey(),
+    openRouterKeyHint: openRouterService.hint(),
     hasAnthropicKey: Boolean(process.env.ANTHROPIC_API_KEY),
+    activeProvider: activeProvider(),
     liveAnswers,
-    model: geminiService.model,
+    model: activeModel(),
+    presetModels: OpenRouterService.getPresetModels(),
     resumeLoaded: resume.loaded,
     resumeLabel: resume.label,
     resumeError: resume.error,
@@ -290,13 +310,13 @@ function readEnvFile() {
 
 function applyEnvFile() {
   const vars = readEnvFile();
-  if (Object.prototype.hasOwnProperty.call(vars, 'GEMINI_API_KEY')) {
-    geminiService.setApiKey(vars.GEMINI_API_KEY);
-    process.env.GEMINI_API_KEY = vars.GEMINI_API_KEY;
+  if (Object.prototype.hasOwnProperty.call(vars, 'OPENROUTER_API_KEY')) {
+    openRouterService.setApiKey(vars.OPENROUTER_API_KEY);
+    process.env.OPENROUTER_API_KEY = vars.OPENROUTER_API_KEY;
   }
-  if (Object.prototype.hasOwnProperty.call(vars, 'GEMINI_MODEL')) {
-    geminiService.setModel(vars.GEMINI_MODEL);
-    process.env.GEMINI_MODEL = vars.GEMINI_MODEL;
+  if (Object.prototype.hasOwnProperty.call(vars, 'OPENROUTER_MODEL')) {
+    openRouterService.setModel(vars.OPENROUTER_MODEL);
+    process.env.OPENROUTER_MODEL = vars.OPENROUTER_MODEL;
   }
   if (Object.prototype.hasOwnProperty.call(vars, 'RESUME_PATH')) process.env.RESUME_PATH = vars.RESUME_PATH;
   if (Object.prototype.hasOwnProperty.call(vars, 'RESPONSE_STYLE')) process.env.RESPONSE_STYLE = vars.RESPONSE_STYLE;
@@ -327,9 +347,15 @@ function upsertEnvVar(key, value) {
 }
 
 function pickAiService() {
-  if (geminiService.hasKey()) return geminiService;
+  if (openRouterService.hasKey()) return openRouterService;
   if (process.env.ANTHROPIC_API_KEY) return aiService;
-  return null;
+  return openRouterService;
+}
+
+function cancelAllAi() {
+  if (openRouterService && typeof openRouterService.cancel === 'function') {
+    openRouterService.cancel();
+  }
 }
 
 function sendAiError(err) {
@@ -338,7 +364,7 @@ function sendAiError(err) {
 }
 
 function missingKeyError() {
-  return new Error('Add a Gemini API key with the gear icon, or set ANTHROPIC_API_KEY in .env.');
+  return new Error('Set OPENROUTER_API_KEY in .env or Settings.');
 }
 
 function isAuthError(err) {
@@ -346,7 +372,8 @@ function isAuthError(err) {
 }
 
 function scheduleLiveAnswer(speechFinal) {
-  if (!liveAnswers || blockLive || !geminiService.hasKey()) return;
+  const service = pickAiService();
+  if (!liveAnswers || blockLive || !service) return;
   clearTimeout(liveTimer);
   liveTimer = setTimeout(() => {
     liveTimer = null;
@@ -355,7 +382,8 @@ function scheduleLiveAnswer(speechFinal) {
 }
 
 async function triggerLiveAnswer() {
-  if (!win || !liveAnswers || blockLive || !geminiService.hasKey()) return;
+  const service = pickAiService();
+  if (!win || !liveAnswers || blockLive || !service) return;
   if (Date.now() < liveErrorUntil) return;
 
   const latest = latestUtterance();
@@ -366,7 +394,7 @@ async function triggerLiveAnswer() {
   lastAnsweredText = promptText;
 
   win.webContents.send('ai-suggestion-start');
-  await geminiService.streamSuggestion(
+  await service.streamSuggestion(
     promptText,
     (chunk) => { if (win) win.webContents.send('ai-suggestion-chunk', chunk); },
     () => { if (win) win.webContents.send('ai-suggestion-complete'); },
@@ -516,7 +544,7 @@ function setupIpcHandlers() {
     deepgramService.stop();
     isListening = false;
     clearTimeout(liveTimer);
-    geminiService.cancel();
+    cancelAllAi();
     if (win) win.webContents.send('status-update', { listening: false });
     return { success: true };
   });
@@ -532,27 +560,39 @@ function setupIpcHandlers() {
   ipcMain.handle('request-summary', async () => triggerAiSummary());
 
   ipcMain.handle('get-ai-settings', () => currentAiSettings());
+  ipcMain.handle('set-language-mode', (_event, lang) => setLanguage(lang));
+  ipcMain.handle('cycle-language', () => cycleLanguage());
 
-  ipcMain.handle('save-gemini-key', (_event, key) => {
+  ipcMain.handle('save-openrouter-key', (_event, key) => {
     const cleaned = String(key || '').trim();
-    if (!cleaned) return { success: false, error: 'Paste a Gemini API key first.' };
+    if (!cleaned) return { success: false, error: 'Paste an OpenRouter API key first.' };
     if (/[\r\n]/.test(cleaned) || cleaned.length > 256) {
-      return { success: false, error: 'That Gemini key is not valid.' };
+      return { success: false, error: 'That OpenRouter key is not valid.' };
     }
-    geminiService.setApiKey(cleaned);
-    process.env.GEMINI_API_KEY = cleaned;
-    upsertEnvVar('GEMINI_API_KEY', cleaned);
-    if (!process.env.GEMINI_MODEL) upsertEnvVar('GEMINI_MODEL', geminiService.model);
+    openRouterService.setApiKey(cleaned);
+    process.env.OPENROUTER_API_KEY = cleaned;
+    upsertEnvVar('OPENROUTER_API_KEY', cleaned);
     lastAnsweredText = '';
     liveErrorUntil = 0;
     return { success: true, settings: currentAiSettings() };
+  });
+
+  ipcMain.handle('set-model-mode', (_event, modelId) => {
+    const cleaned = String(modelId || '').trim();
+    if (!cleaned) return currentAiSettings();
+    openRouterService.setModel(cleaned);
+    process.env.OPENROUTER_MODEL = cleaned;
+    upsertEnvVar('OPENROUTER_MODEL', cleaned);
+    lastAnsweredText = '';
+    if (win) win.webContents.send('ai-settings-changed', currentAiSettings());
+    return currentAiSettings();
   });
 
   ipcMain.handle('set-live-answers', (_event, enabled) => {
     liveAnswers = Boolean(enabled);
     if (!liveAnswers) {
       clearTimeout(liveTimer);
-      geminiService.cancel();
+      cancelAllAi();
     }
     return currentAiSettings();
   });
@@ -577,7 +617,7 @@ function setupIpcHandlers() {
     transcriptHistory = [];
     lastAnsweredText = '';
     clearTimeout(liveTimer);
-    geminiService.cancel();
+    cancelAllAi();
   });
 
   ipcMain.on('minimize-window', () => minimizeWindow());

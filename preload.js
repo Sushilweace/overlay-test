@@ -19,7 +19,10 @@ contextBridge.exposeInMainWorld('meetingAssistant', {
   minimizeWindow: () => ipcRenderer.send('minimize-window'),
   closeApp: () => ipcRenderer.send('close-app'),
   getAiSettings: () => ipcRenderer.invoke('get-ai-settings'),
-  saveGeminiKey: (key) => ipcRenderer.invoke('save-gemini-key', key),
+  saveOpenRouterKey: (key) => ipcRenderer.invoke('save-openrouter-key', key),
+  setModelMode: (modelId) => ipcRenderer.invoke('set-model-mode', modelId),
+  setLanguageMode: (lang) => ipcRenderer.invoke('set-language-mode', lang),
+  cycleLanguage: () => ipcRenderer.invoke('cycle-language'),
   setLiveAnswers: (enabled) => ipcRenderer.invoke('set-live-answers', enabled),
 
   // Event listeners from main process

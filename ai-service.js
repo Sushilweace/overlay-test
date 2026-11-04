@@ -58,7 +58,7 @@ class AiService {
 
   async streamQuestion(question, recentTranscript, onChunk, onComplete, onError, systemPrompt, image) {
     if (image) {
-      if (onError) onError(new Error('Pasted images need a Gemini key.'));
+      if (onError) onError(new Error('Pasted images are processed via OpenRouter.'));
       return;
     }
     try {

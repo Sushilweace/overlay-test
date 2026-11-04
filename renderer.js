@@ -7,10 +7,15 @@ const settingsBtn = document.getElementById('settingsBtn');
 const minimizeBtn = document.getElementById('minimizeBtn');
 const closeBtn = document.getElementById('closeBtn');
 const settingsPanel = document.getElementById('settingsPanel');
-const geminiKeyInput = document.getElementById('geminiKeyInput');
-const toggleGeminiKeyBtn = document.getElementById('toggleGeminiKeyBtn');
-const saveGeminiKeyBtn = document.getElementById('saveGeminiKeyBtn');
-const geminiKeyStatus = document.getElementById('geminiKeyStatus');
+const modelSelect = document.getElementById('modelSelect');
+const customModelRow = document.getElementById('customModelRow');
+const customModelInput = document.getElementById('customModelInput');
+const saveCustomModelBtn = document.getElementById('saveCustomModelBtn');
+const languageSelect = document.getElementById('languageSelect');
+const openrouterKeyInput = document.getElementById('openrouterKeyInput');
+const toggleOpenRouterKeyBtn = document.getElementById('toggleOpenRouterKeyBtn');
+const saveOpenRouterKeyBtn = document.getElementById('saveOpenRouterKeyBtn');
+const openrouterKeyStatus = document.getElementById('openrouterKeyStatus');
 const settingsHint = document.getElementById('settingsHint');
 const liveAnswersToggle = document.getElementById('liveAnswersToggle');
 const imagePreview = document.getElementById('imagePreview');
@@ -215,23 +220,81 @@ closeBtn.addEventListener('click', () => {
   window.meetingAssistant.closeApp();
 });
 
+contextBadge.addEventListener('click', async () => {
+  const settings = await window.meetingAssistant.cycleLanguage();
+  applyAiSettings(settings);
+});
+
+languageSelect.addEventListener('change', async () => {
+  const settings = await window.meetingAssistant.setLanguageMode(languageSelect.value);
+  applyAiSettings(settings);
+});
+
+toggleOpenRouterKeyBtn.addEventListener('click', () => {
+  const showing = openrouterKeyInput.type === 'text';
+  openrouterKeyInput.type = showing ? 'password' : 'text';
+  toggleOpenRouterKeyBtn.textContent = showing ? 'Show' : 'Hide';
+});
+
+openrouterKeyInput.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter') saveOpenRouterKey();
+});
+
+saveOpenRouterKeyBtn.addEventListener('click', saveOpenRouterKey);
+
+async function saveOpenRouterKey() {
+  const key = openrouterKeyInput.value.trim();
+  if (!key) {
+    showError('Paste an OpenRouter API key first.');
+    return;
+  }
+  saveOpenRouterKeyBtn.disabled = true;
+  try {
+    const res = await window.meetingAssistant.saveOpenRouterKey(key);
+    if (!res.success) {
+      showError(res.error || 'Could not save the OpenRouter key.');
+      return;
+    }
+    openrouterKeyInput.value = '';
+    applyAiSettings(res.settings);
+  } catch (err) {
+    showError(err.message);
+  } finally {
+    saveOpenRouterKeyBtn.disabled = false;
+  }
+}
+
+modelSelect.addEventListener('change', async () => {
+  if (modelSelect.value === 'custom') {
+    customModelRow.classList.remove('hidden');
+    customModelInput.focus();
+  } else {
+    customModelRow.classList.add('hidden');
+    const settings = await window.meetingAssistant.setModelMode(modelSelect.value);
+    applyAiSettings(settings);
+  }
+});
+
+async function saveCustomModel() {
+  const modelId = customModelInput.value.trim();
+  if (!modelId) {
+    showError('Enter a valid model ID (e.g. deepseek/deepseek-r1)');
+    return;
+  }
+  const settings = await window.meetingAssistant.setModelMode(modelId);
+  applyAiSettings(settings);
+}
+
+saveCustomModelBtn.addEventListener('click', saveCustomModel);
+customModelInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') saveCustomModel();
+});
+
 settingsBtn.addEventListener('click', () => {
   const open = settingsPanel.classList.toggle('hidden') === false;
   settingsBtn.classList.toggle('active', open);
-  if (open) geminiKeyInput.focus();
+  if (open) openrouterKeyInput.focus();
 });
-
-toggleGeminiKeyBtn.addEventListener('click', () => {
-  const showing = geminiKeyInput.type === 'text';
-  geminiKeyInput.type = showing ? 'password' : 'text';
-  toggleGeminiKeyBtn.textContent = showing ? 'Show' : 'Hide';
-});
-
-geminiKeyInput.addEventListener('keydown', (event) => {
-  if (event.key === 'Enter') saveGeminiKey();
-});
-
-saveGeminiKeyBtn.addEventListener('click', saveGeminiKey);
 
 liveAnswersToggle.addEventListener('change', async () => {
   liveAnswersEnabled = liveAnswersToggle.checked;
@@ -244,24 +307,39 @@ function applyAiSettings(settings) {
   liveAnswersEnabled = settings.liveAnswers;
   liveAnswersToggle.checked = settings.liveAnswers;
 
-  if (settings.hasGeminiKey) {
-    geminiKeyStatus.textContent = `Key saved ····${settings.geminiKeyHint}`;
-    geminiKeyStatus.classList.add('ok');
-    geminiKeyInput.placeholder = 'Paste a new key to replace';
+  if (settings.language && languageSelect.value !== settings.language) {
+    languageSelect.value = settings.language;
+  }
+
+  // Model selection sync
+  const currentModel = settings.model || '';
+  const knownOptions = Array.from(modelSelect.options).map((o) => o.value);
+  if (knownOptions.includes(currentModel)) {
+    modelSelect.value = currentModel;
+    customModelRow.classList.add('hidden');
+  } else if (currentModel) {
+    modelSelect.value = 'custom';
+    customModelRow.classList.remove('hidden');
+    customModelInput.value = currentModel;
+  }
+
+  if (settings.hasOpenRouterKey) {
+    openrouterKeyStatus.textContent = `Key saved ····${settings.openRouterKeyHint}`;
+    openrouterKeyStatus.classList.add('ok');
+    openrouterKeyInput.placeholder = 'Paste a new key to replace';
   } else {
-    geminiKeyStatus.textContent = liveAnswersEnabled
-      ? 'Save a Gemini key to start live answers.'
-      : 'No Gemini key yet';
-    geminiKeyStatus.classList.remove('ok');
-    geminiKeyInput.placeholder = 'Paste Gemini API key';
+    openrouterKeyStatus.textContent = 'No OpenRouter key yet';
+    openrouterKeyStatus.classList.remove('ok');
+    openrouterKeyInput.placeholder = 'Paste OpenRouter API key';
   }
 
   const resumeBit = settings.resumeError
     ? settings.resumeError
     : settings.resumeLoaded
       ? `Using ${settings.resumeLabel}`
-      : 'Add resume.txt, or set RESUME_PATH in .env';
-  settingsHint.textContent = `Model ${settings.model} from .env. ${resumeBit}. Clear GEMINI_API_KEY in .env to remove the key, then click this window.`;
+      : 'Using WeAce project profile';
+  
+  settingsHint.textContent = `OpenRouter Model: ${settings.model || 'none'}. ${resumeBit}.`;
   minimizeBtn.title = settings.hideFromTaskbar ? 'Hide (Ctrl+Shift+H shows it again)' : 'Minimize';
 
   const language = String(settings.language || 'auto').toUpperCase();
@@ -276,33 +354,9 @@ function applyAiSettings(settings) {
   }
 
   if (aiBox.classList.contains('empty')) {
-    aiBox.textContent = settings.hasGeminiKey
+    aiBox.textContent = settings.hasOpenRouterKey
       ? emptyAnswerText
-      : 'Add a Gemini key with the gear icon, or type a question below.';
-  }
-
-}
-
-async function saveGeminiKey() {
-  const key = geminiKeyInput.value.trim();
-  if (!key) {
-    showError('Paste a Gemini API key first.');
-    return;
-  }
-
-  saveGeminiKeyBtn.disabled = true;
-  try {
-    const res = await window.meetingAssistant.saveGeminiKey(key);
-    if (!res.success) {
-      showError(res.error || 'Could not save the Gemini key.');
-      return;
-    }
-    geminiKeyInput.value = '';
-    applyAiSettings(res.settings);
-  } catch (err) {
-    showError(err.message);
-  } finally {
-    saveGeminiKeyBtn.disabled = false;
+      : 'Add your OpenRouter key in settings (⚙ icon) to start.';
   }
 }
 

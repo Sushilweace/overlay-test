@@ -20,12 +20,10 @@ Copy `.env.example` to `.env` and fill in the keys you use.
 | Variable | Purpose |
 |---|---|
 | `DEEPGRAM_API_KEY` | Live speech-to-text |
-| `GEMINI_API_KEY` | Live answers. Paste it here, or use the gear menu. Clear this line to remove the key. |
-| `GEMINI_MODEL` | Model id. Default `gemini-3.8-flash`. `flash`, `lite`, and `pro` are also accepted. |
-| `ANTHROPIC_API_KEY` | Optional. Used for suggestions only when no Gemini key is set. |
-| `ANTHROPIC_MODEL` | Claude model, if you use Anthropic. |
+| `OPENROUTER_API_KEY` | OpenRouter key powering all AI work (DeepSeek, Claude, GPT-4o, Llama). |
+| `OPENROUTER_MODEL` | Active model (e.g. `deepseek/deepseek-v4.1-flash`, `openrouter/free`, `anthropic/claude-3.5-haiku`). |
 | `HIDE_FROM_TASKBAR` | `true` keeps the window off the taskbar. `Ctrl+Shift+H` shows it again. |
-| `RESUME_PATH` | Optional path to a `.txt` or `.md` resume. If empty, the app reads `resume.txt` or `resume.md` in this folder. |
+| `RESUME_PATH` | Optional path to a `.txt` or `.md` resume. If empty, the app reads `config/profile.md`. |
 | `RESPONSE_STYLE` | `spoken` (default) or `brief`. |
 
 After you edit `.env`, click the overlay window so it reloads the file.
@@ -44,7 +42,7 @@ System audio uses the Windows playback mix, so the meeting has to be playing on 
 
 ## Answers
 
-The answer box is at the top. With **Real-time answers** on, Gemini writes a spoken reply when a sentence ends. **Suggestion** and **Summary** use the same key.
+The answer box is at the top. With **Real-time answers** on, OpenRouter writes a spoken reply when a sentence ends. **Suggestion** and **Summary** use the same OpenRouter key.
 
 Put your resume in `resume.txt` if you want those replies to use your real background. The model will not invent employers, dates, or numbers that are not in that file.
 

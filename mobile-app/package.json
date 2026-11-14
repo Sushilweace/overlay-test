@@ -1,0 +1,12 @@
+{
+  "name": "sushil-ai-assistant",
+  "version": "1.0.0",
+  "description": "Sushil Kumar AI Meeting & Interview Assistant Android App",
+  "dependencies": {
+    "@capacitor/core": "^6.2.0",
+    "@capacitor/android": "^6.2.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.2.0"
+  }
+}

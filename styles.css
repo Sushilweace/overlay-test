@@ -102,6 +102,26 @@ body {
 .badge-context {
   background: rgba(167, 139, 250, 0.16);
   color: #c4b5fd;
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+  transition: all 0.15s ease;
+}
+
+.badge-context:hover {
+  background: rgba(167, 139, 250, 0.32);
+  color: #ede9fe;
+}
+
+.settings-separator {
+  height: 1px;
+  background: var(--border-color);
+  margin: 10px 0;
+}
+
+.settings-select {
+  width: 100%;
+  margin-top: 4px;
+  margin-bottom: 8px;
 }
 
 .context-warning {

@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="/manifest.json">
+  <title>Sushil AI Assistant</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #090d16;
+      color: #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      overflow: hidden;
+    }
+
+    /* Header */
+    header {
+      background-color: #0f172a;
+      border-bottom: 1px solid #1e293b;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #6366f1, #3b82f6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: #fff;
+      font-size: 15px;
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+    }
+
+    .title-area h1 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #f8fafc;
+    }
+
+    .title-area span {
+      font-size: 11px;
+      color: #10b981;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .title-area span::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: #10b981;
+      display: inline-block;
+    }
+
+    .badge {
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      background: rgba(99, 102, 241, 0.15);
+      color: #818cf8;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    /* Chat Messages Container */
+    #chat-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      scroll-behavior: smooth;
+    }
+
+    .message {
+      max-width: 88%;
+      padding: 12px 15px;
+      border-radius: 16px;
+      font-size: 14.5px;
+      line-height: 1.5;
+      word-break: break-word;
+      position: relative;
+    }
+
+    .message.user {
+      align-self: flex-end;
+      background: #4f46e5;
+      color: #ffffff;
+      border-bottom-right-radius: 4px;
+      box-shadow: 0 2px 10px rgba(79, 70, 229, 0.3);
+    }
+
+    .message.assistant {
+      align-self: flex-start;
+      background: #1e293b;
+      color: #f1f5f9;
+      border-bottom-left-radius: 4px;
+      border: 1px solid #334155;
+    }
+
+    .message.assistant.streaming::after {
+      content: "▋";
+      color: #818cf8;
+      animation: blink 0.8s infinite;
+      margin-left: 3px;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 11px;
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+    .copy-btn:active {
+      color: #fff;
+    }
+
+    /* Quick Prompts Bar */
+    .chips-wrapper {
+      padding: 6px 12px 10px 12px;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      flex-shrink: 0;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .chips-wrapper::-webkit-scrollbar {
+      display: none;
+    }
+
+    .chip {
+      background: #1e293b;
+      color: #cbd5e1;
+      border: 1px solid #334155;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .chip:active {
+      background: #334155;
+      color: #fff;
+    }
+
+    /* Input Footer */
+    footer {
+      background: #0f172a;
+      border-top: 1px solid #1e293b;
+      padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .input-wrapper {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    textarea {
+      width: 100%;
+      background: #1e293b;
+      color: #f8fafc;
+      border: 1px solid #334155;
+      border-radius: 22px;
+      padding: 10px 16px;
+      font-size: 14.5px;
+      line-height: 1.35;
+      resize: none;
+      max-height: 100px;
+      min-height: 42px;
+      outline: none;
+    }
+    textarea:focus {
+      border-color: #6366f1;
+    }
+
+    .icon-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: transform 0.1s, background 0.2s;
+    }
+    .icon-btn:active {
+      transform: scale(0.92);
+    }
+
+    .mic-btn {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #94a3b8;
+    }
+    .mic-btn.recording {
+      background: #ef4444;
+      color: #ffffff;
+      animation: pulse 1.2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+      50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+    }
+
+    .send-btn {
+      background: #4f46e5;
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(79, 70, 229, 0.4);
+    }
+    .send-btn:disabled {
+      background: #334155;
+      color: #64748b;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    .hint-text {
+      font-size: 10.5px;
+      color: #64748b;
+      text-align: center;
+      padding-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="avatar">SK</div>
+      <div class="title-area">
+        <h1>Sushil Assistant</h1>
+        <span>Online · GPT-4o-Mini</span>
+      </div>
+    </div>
+    <div style="display: flex; gap: 8px; align-items: center;">
+      <a href="/apk" class="badge" style="text-decoration: none; background: rgba(16, 185, 129, 0.2); color: #34d399; border-color: rgba(16, 185, 129, 0.4);">⬇ APK</a>
+      <div class="badge">Reference Mode</div>
+    </div>
+  </header>
+
+  <div id="chat-container">
+    <div class="message assistant">
+      Namaste Sushil! I am synced with your full <strong>Career and Project Reference</strong> (WeAce microservices migration, optimistic locking, calendar sync, and architecture patterns).<br><br>
+      Ask any interview question or tap a topic below to test.
+    </div>
+  </div>
+
+  <div class="chips-wrapper">
+    <button class="chip" onclick="askPreset('Explain how you migrated WeAce from Laravel monolith to NestJS microservices.')">WeAce Microservices</button>
+    <button class="chip" onclick="askPreset('How did you handle booking concurrency and race conditions?')">Concurrency & Locks</button>
+    <button class="chip" onclick="askPreset('How did you solve the timezone and daylight saving issues on calendars?')">Timezone Sync</button>
+    <button class="chip" onclick="askPreset('Tell me about your multi-tenant white-label architecture.')">Multi-Tenant</button>
+    <button class="chip" onclick="askPreset('Tell me about yourself and your background.')">Intro</button>
+  </div>
+
+  <footer>
+    <button id="mic-btn" class="icon-btn mic-btn" title="Speak question">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+        <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+      </svg>
+    </button>
+    <div class="input-wrapper">
+      <textarea id="question-input" rows="1" placeholder="Ask interview question..."></textarea>
+    </div>
+    <button id="send-btn" class="icon-btn send-btn" title="Send">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+      </svg>
+    </button>
+  </footer>
+
+  <script>
+    const chatContainer = document.getElementById('chat-container');
+    const input = document.getElementById('question-input');
+    const sendBtn = document.getElementById('send-btn');
+    const micBtn = document.getElementById('mic-btn');
+
+    let isStreaming = false;
+
+    // Auto-resize input
+    input.addEventListener('input', () => {
+      input.style.height = 'auto';
+      input.style.height = Math.min(input.scrollHeight, 100) + 'px';
+    });
+
+    // Enter to send
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendQuestion();
+      }
+    });
+
+    sendBtn.addEventListener('click', sendQuestion);
+
+    function askPreset(text) {
+      if (isStreaming) return;
+      input.value = text;
+      sendQuestion();
+    }
+
+    function addMessage(role, text) {
+      const msg = document.createElement('div');
+      msg.className = `message ${role}`;
+      msg.textContent = text;
+      chatContainer.appendChild(msg);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+      return msg;
+    }
+
+    async function sendQuestion() {
+      const text = input.value.trim();
+      if (!text || isStreaming) return;
+
+      input.value = '';
+      input.style.height = 'auto';
+      addMessage('user', text);
+
+      isStreaming = true;
+      sendBtn.disabled = true;
+
+      const assistantMsg = addMessage('assistant', '');
+      assistantMsg.classList.add('streaming');
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question: text })
+        });
+
+        if (!res.ok) {
+          throw new Error(`HTTP error ${res.status}`);
+        }
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+        let buffer = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop();
+
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed.startsWith('data:')) continue;
+            const payload = trimmed.replace(/^data:\s*/, '');
+            if (payload === '[DONE]') break;
+
+            try {
+              const data = JSON.parse(payload);
+              if (data.chunk) {
+                assistantMsg.textContent += data.chunk;
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+              } else if (data.error) {
+                assistantMsg.textContent += ` [Error: ${data.error}]`;
+              }
+            } catch (_) {}
+          }
+        }
+      } catch (err) {
+        assistantMsg.textContent = `Error connecting to assistant: ${err.message}`;
+      } finally {
+        assistantMsg.classList.remove('streaming');
+        isStreaming = false;
+        sendBtn.disabled = false;
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      }
+    }
+
+    // Android Web Speech Recognition
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+
+      let isRecording = false;
+
+      micBtn.addEventListener('click', () => {
+        if (isRecording) {
+          recognition.stop();
+        } else {
+          recognition.start();
+        }
+      });
+
+      recognition.onstart = () => {
+        isRecording = true;
+        micBtn.classList.add('recording');
+      };
+
+      recognition.onend = () => {
+        isRecording = false;
+        micBtn.classList.remove('recording');
+      };
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        input.value = transcript;
+        input.style.height = 'auto';
+        input.style.height = Math.min(input.scrollHeight, 100) + 'px';
+      };
+
+      recognition.onerror = (event) => {
+        isRecording = false;
+        micBtn.classList.remove('recording');
+      };
+    } else {
+      micBtn.style.display = 'none';
+    }
+  </script>
+</body>
+</html>

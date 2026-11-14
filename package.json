@@ -4,7 +4,9 @@
   "description": "Floating overlay meeting assistant with live Deepgram transcription and Anthropic AI assistance",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "mobile": "node mobile-server.js",
+    "build": "electron-packager . \"Meeting Notes\" --platform=win32 --arch=x64 --out=dist --overwrite --asar --ignore=\"^/dist\" --ignore=\"\\.zip$\" && powershell -Command \"Copy-Item -Path '.env' -Destination 'dist/Meeting Notes-win32-x64/.env' -Force; Copy-Item -Path 'config' -Destination 'dist/Meeting Notes-win32-x64/config' -Recurse -Force\""
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
@@ -12,6 +14,7 @@
     "dotenv": "^16.4.7"
   },
   "devDependencies": {
-    "electron": "^31.7.7"
+    "electron": "^31.7.7",
+    "electron-packager": "^17.1.2"
   }
 }

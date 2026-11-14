@@ -25,7 +25,9 @@ class DeepgramService {
       punctuate: true,
       encoding: 'linear16',
       sample_rate: 16000,
-      channels: 1
+      channels: 1,
+      endpointing: 250,
+      utterance_end_ms: 1000
     });
 
     this.connection.on(LiveTranscriptionEvents.Open, () => {

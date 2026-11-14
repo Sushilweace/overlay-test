@@ -61,7 +61,8 @@ class AudioRecorder {
     }
 
     this.source = this.audioContext.createMediaStreamSource(this.mediaStream);
-    this.processor = this.audioContext.createScriptProcessor(4096, 1, 1);
+    // Buffer size 1024 samples @ 16kHz = 64ms latency per audio packet (reduced from 4096 / 256ms)
+    this.processor = this.audioContext.createScriptProcessor(1024, 1, 1);
 
     this.processor.onaudioprocess = (e) => {
       const inputData = e.inputBuffer.getChannelData(0);

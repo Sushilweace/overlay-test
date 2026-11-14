@@ -378,6 +378,26 @@ window.meetingAssistant.onStatusChange(({ listening }) => {
   }
 });
 
+let aiScrollScheduled = false;
+function scheduleAiScroll() {
+  if (aiScrollScheduled) return;
+  aiScrollScheduled = true;
+  requestAnimationFrame(() => {
+    aiBox.scrollTop = aiBox.scrollHeight;
+    aiScrollScheduled = false;
+  });
+}
+
+let transcriptScrollScheduled = false;
+function scheduleTranscriptScroll() {
+  if (transcriptScrollScheduled) return;
+  transcriptScrollScheduled = true;
+  requestAnimationFrame(() => {
+    transcriptBox.scrollTop = transcriptBox.scrollHeight;
+    transcriptScrollScheduled = false;
+  });
+}
+
 window.meetingAssistant.onTranscript(({ text, isFinal }) => {
   if (isFinal) {
     interimTranscript.textContent = '';
@@ -392,10 +412,10 @@ window.meetingAssistant.onTranscript(({ text, isFinal }) => {
 
     totalWordCount += text.trim().split(/\s+/).length;
     wordCountEl.textContent = `${totalWordCount} words`;
-    transcriptBox.scrollTop = transcriptBox.scrollHeight;
+    scheduleTranscriptScroll();
   } else {
     interimTranscript.textContent = text;
-    transcriptBox.scrollTop = transcriptBox.scrollHeight;
+    scheduleTranscriptScroll();
   }
 });
 
@@ -432,7 +452,7 @@ function addChatMessage(kind, label, text, imageSrc) {
     message.appendChild(img);
   }
   aiBox.appendChild(message);
-  aiBox.scrollTop = aiBox.scrollHeight;
+  scheduleAiScroll();
   return body;
 }
 
@@ -447,7 +467,7 @@ function appendAnswerChunk(chunk) {
   activeAnswerEl.parentElement.classList.remove('pending');
   aiBox.classList.remove('pending');
   activeAnswerEl.textContent += chunk;
-  aiBox.scrollTop = aiBox.scrollHeight;
+  scheduleAiScroll();
 }
 
 function finishAnswerStream() {

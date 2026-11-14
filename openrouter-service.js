@@ -139,7 +139,10 @@ class OpenRouterService {
           stream: true,
           max_tokens: effectiveMaxTokens,
           temperature: 0.3,
-          include_reasoning: false
+          include_reasoning: false,
+          provider: {
+            sort: 'throughput'
+          }
         }),
         signal: controller.signal
       });

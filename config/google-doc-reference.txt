@@ -1,0 +1,297 @@
+Sushil Kumar: Detailed Career and Project Reference
+Purpose: one place with every project, decision, problem and talking point from your experience, written so you can revise for interviews and use it as source material for your own AI/interview-prep tools. Everything marked [CONFIRM] is something I wrote as a likely or typical detail and you must verify or replace it with the real fact. Do not train any tool on [CONFIRM] lines until you have fixed them.
+Legend: plain text = told by you. [CONFIRM] = check or fill in. Numbers in [X] = add your real figure; leave out if you do not know it.
+1. Profile Snapshot
+Name
+	Sushil Kumar
+	Contact
+	+91-8317086640, +91-8004877065 | sushilsrivastav012@gmail.com | linkedin.com/in/sushil-kumar-96b903195
+	Current positioning
+	Full Stack / Backend Developer, 7+ years (Node.js, NestJS, Laravel), B2B SaaS, AWS
+	Experience split
+	Total 7+ years (since July 2019). PrimeITZen about 3 years (Laravel, CodeIgniter). WeAce 4 years: first 2 years Laravel full-stack, last 2 years Node.js/NestJS.
+	Current role
+	Backend Developer at WeAce (Sep 2022 to present; LinkedIn shows Full Stack Developer, Node.js)
+	Notice
+	Immediate joiner (last working day at WeAce completed)
+	Education
+	MCA 2019: LDC Institute of Technical Studies, Allahabad (AKTU, Lucknow), 72% aggregate. BA 2015: CSJM University, Kanpur, 56%. 12th 2012: UP Board, Science, 68%, First division. 10th 2010: UP Board, 74%, First division.
+	Languages
+	English, Hindi
+	Daily tools
+	Git, Postman, VS Code, Cursor AI
+	
+
+2. Career Timeline
+Period
+	Company and role
+	Main technologies
+	07/2019 - 09/2022
+	PrimeITZen Software Solutions, Prayagraj. PHP Full-Stack Developer
+	Laravel (2.3 years), CodeIgniter (1 year), Microsoft SQL Server, MySQL, jQuery, AJAX, REST APIs for Android
+	09/2022 - present
+	WeAce (B2B coaching and mentoring SaaS). Backend Developer
+	Laravel (first 2 years), then Node.js, NestJS, TypeScript, MongoDB, MySQL, AWS, Docker, Jenkins, Microsoft Graph, Google Calendar
+	2025 - 2026 (personal)
+	Personal AI projects
+	Python: RAG document chat, AI mock interview platform; AI content creator (design stage)
+	
+
+3. Skills Inventory (be exact about levels)
+Skill
+	Level
+	Where you used it
+	JavaScript / TypeScript
+	Strong (JS 7+ years; TS with NestJS)
+	All backend and frontend work
+	Node.js, NestJS, Express
+	Working to strong (about 2 years)
+	WeAce microservices after the migration
+	Laravel / PHP, CodeIgniter
+	Strong (Laravel 4+ years, CodeIgniter 1 year)
+	PrimeITZen, WeAce first 2 years, alibrary.in, Aman Hospital Portal
+	REST APIs, JSON
+	Strong (7+ years)
+	Android sync APIs, WeAce APIs
+	MySQL, Microsoft SQL Server
+	Strong (7+ years)
+	Schemas, stored procedures, queries
+	MongoDB (Mongoose)
+	Working (current role)
+	WeAce
+	AWS: Cognito, S3, EC2, CloudWatch
+	Working (since WeAce, 09/2022)
+	Auth flows, files, database hosting, logs
+	Docker, Jenkins, CI/CD, Git
+	Working
+	WeAce deployments
+	OAuth2, JWT, Microsoft Entra ID
+	Working
+	Calendar integrations, API security
+	Microsoft Graph API, Google Calendar API
+	Strong for this use case
+	Calendar sync pipeline
+	Multi-tenant and white-label design
+	Working (hands-on at WeAce)
+	Corporate-ID scoping, domains, branding, emails
+	Python
+	Basic (beginner)
+	Personal RAG and AI projects
+	RAG (embeddings, vector search, LLM APIs)
+	Basic, project-level
+	Chat with your own document
+	Jest / unit testing
+	Basic
+	Learning; Cursor AI helps write tests
+	Frontend: HTML, CSS, AJAX, jQuery
+	Working
+	Laravel server-rendered UIs
+	Not hands-on
+	None
+	Kubernetes, Kafka, React, GraphQL, Playwright, Databricks, Neo4j, DataHub (do not claim)
+	
+
+Redis, RabbitMQ and PostgreSQL: not confirmed. Add them here only if you have really used them.
+4. WeAce: Company and Product Context
+WeAce is an enterprise (B2B) talent-development SaaS platform for coaching, mentoring, training and professional assessments. It offers Individual Development Plans (IDPs), scalable assessment frameworks, and unlimited coaching models. It is sold as a white-labeled product: each corporate client gets its own domain, branding and customized emails. Users are corporate admins, coaches, mentors and employees (mostly non-technical).
+5. Project Details
+5.1 Laravel to NestJS migration (WeAce)
+Problem
+	The platform ran on a Laravel monolith. It needed better API response times and throughput, and a modular, asynchronous architecture as it grew.
+	My role
+	Led the migration of core platform modules to NestJS (Node.js) microservices over about 2 years.
+	Approach
+	Module by module, so the product kept running. [CONFIRM: same API contract kept, traffic switched gradually, rollback path.]
+	Stack
+	Node.js, NestJS, TypeScript, MongoDB, MySQL, Docker, Jenkins
+	Challenges
+	Keeping behavior identical (validation, auth, edge cases); moving from Eloquent models and Laravel middleware/sessions to the NestJS data layer and token-based auth. [CONFIRM which were the real ones.]
+	Result
+	Improved API response times and server throughput. [X ms before to Y ms after; number of modules migrated.]
+	Be ready to explain
+	Why NestJS over Express (structure, DI, decorators, testing), monolith vs microservices trade-offs, how you tested parity.
+	
+
+5.2 Multi-tenant and white-label platform (WeAce)
+Problem
+	Many corporate clients on one platform, each needing its own branding and emails, with no data mixing between companies.
+	How it works
+	Each corporate gets its own white-label domain. All data is stored and queried with the corporate ID, so one company's data never mixes with another's. When someone opens a tenant's website, the site changes according to the tenant's details: website name, logo, SMTP details and more.
+	Emails
+	Each corporate can edit its own email templates (header, footer, logo) and uses its own SMTP settings, so emails go out under the client's brand.
+	Your role
+	Contributed to the white-label and multi-tenant capabilities. [CONFIRM which parts you built: domain mapping, tenant middleware, email templates, SMTP.]
+	Design points to explain
+	Shared database with tenant ID vs schema or database per tenant. Central enforcement of the tenant filter (middleware or global scope). Tenant-aware cache, files and queues. Tests proving tenant A cannot read tenant B. SPF and DKIM for custom sender domains.
+	Result
+	Each client runs the product as its own. [X corporate clients/tenants.]
+	
+
+5.3 Calendar sync and timezone management (WeAce)
+Problem
+	Coaches and clients are in different countries. Slots must be fetched from the coach's real calendar and shown correctly in every timezone.
+	What you built
+	A sync pipeline using Microsoft Graph API and Google Calendar API, with OAuth2 and Microsoft Entra ID, that fetches available slots and creates events, automating scheduling for coaching and mentoring cohorts.
+	Timezone fix
+	Before: timezones were stored as a timezone ID, which made conversion harder and gave wrong abbreviations in US and UK daylight saving periods (EST vs EDT, GMT vs BST). After: store the timezone name as text (timezoneText) so conversion is simple, and the correct abbreviation shows in real time, including day/night (daylight saving) differences.
+	Debugging steps
+	[CONFIRM: reproduced with US and UK timezones around daylight saving dates, compared stored vs displayed values, traced how the abbreviation was calculated.]
+	Details to add
+	[CONFIRM: tokens (refresh, encrypted storage), webhooks vs polling, rate limits, how old records using the ID were handled.]
+	Edge cases to mention
+	Daylight saving switch days, half-hour offsets, slots near midnight, users in different countries seeing the same slot at their local time.
+	
+
+5.4 Booking concurrency and data integrity (WeAce)
+Problem
+	Two users trying to book the same slot (for example 2 to 3 pm on a coach's calendar) at the same moment could create a double booking.
+	Solution
+	The system checks real-time free slots, and the booking is created inside a database transaction, with a check at insert time that the coach calendar is still free. ACID transactions and optimistic locking handle parallel bookings.
+	Explain clearly
+	Atomicity, Consistency, Isolation, Durability. Optimistic locking: a version field must be unchanged for the update to succeed, otherwise the second request fails cleanly. Pessimistic locking (SELECT FOR UPDATE) is the alternative. A unique constraint is a last line of defense. Idempotency keys make retries safe.
+	Result
+	No double bookings under parallel requests. [CONFIRM and add numbers if known.]
+	
+
+5.5 AWS and authentication (WeAce)
+Cognito
+	Used for user registration, OTP, email verification and password reset. Also admin actions: updating an existing email and forcing a password change.
+	S3
+	Storage for images, PDFs and Excel files. [CONFIRM: pre-signed URLs, private buckets.]
+	CloudWatch Logs
+	Monitor server-level exceptions and errors.
+	EC2
+	Database hosting with daily backups. [CONFIRM the reason it was EC2 and not RDS, for example cost, setup or control.]
+	Be ready to explain
+	IAM least privilege, why Cognito, RDS vs EC2 for databases, backup and restore testing.
+	
+
+5.6 DevOps and release process (WeAce)
+Docker
+	Containerized application components for repeatable deployments.
+	Jenkins pipeline
+	After a push to Git, a Jenkins build runs and deploys to the specific server. Stages: lock resource, pre-clean, detect changes, checkout, build, deploy. This removed manual staging steps and deployment errors.
+	Release cycle
+	2-week cycles: about 3 to 4 days requirement analysis and backend coding, 1 to 2 days frontend, 2 to 3 days testing, then UAT and production with testing on both servers by testers.
+	Hotfixes
+	If a production issue appears, a hotfix is released the same day without business impact.
+	Not hands-on
+	Kubernetes (do not claim).
+	
+
+5.7 IDP report module and Training and Assessment engine (WeAce)
+What you built
+	The initial Individual Development Plan (IDP) report module and the Training and Assessment engine components used by enterprise clients.
+	AI extension
+	The team is now extending the IDP report with AI-generated reports. You worked on the initial report, not the AI part. [CONFIRM if you contributed to the AI part.]
+	How you would build the AI version
+	Collect assessment results, goals and role; build a structured prompt; call the LLM; require output in a fixed schema (strengths, gaps, actions); validate, store, and let a coach review; log prompts and responses for quality checks.
+	
+
+5.8 Nexa Coach (WeAce, team project)
+What it is
+	A chat-based AI coach that gives personalized insights such as strengths and development areas.
+	Your involvement
+	Working alongside the team and studying its design. [CONFIRM what you actually touched.]
+	How you would explain the design
+	Per-user chat history; retrieve context (assessments, goals, notes) with embeddings; add it to the prompt; guardrails; tenant-isolated retrieval so one company's data never leaks to another; evaluate answers with test questions.
+	
+
+5.9 Laravel full-stack era (WeAce, first 2 years)
+Designed, maintained and optimized enterprise features using a Laravel full-stack architecture, with robust validation and clean UI/UX workflows. Your Laravel structure: MVC; Form Requests for validation; middleware for authentication, authorization and rate limiting; thin controllers as entry points; service classes for reusable business logic; repositories for data access [CONFIRM you use them]; models for tables and relations.
+5.10 PrimeITZen Software Solutions (07/2019 - 09/2022)
+* Led end-to-end development of business-critical applications using Laravel (2.3 years) and CodeIgniter (1 year).
+* Designed relational schemas and stored procedures in Microsoft SQL Server.
+* Created secure RESTful APIs to sync data with companion Android apps. [CONFIRM: token auth, handling repeated or failed syncs.]
+* Integrated frontends with backend services using jQuery, AJAX and strict server-side validation.
+5.11 alibrary.in (ed-tech platform, team of 3)
+Full-Stack Developer. Stack: Laravel, CodeIgniter, MySQL, Linux server. A role-based platform with 3 separate interfaces for Publishers, Guests and Schools. Digitized manual workflows for educational institutions (assignments, student indices, faculty charts) and added an e-book monetization module. [CONFIRM: how role-based access was done, payment flow for monetization.]
+5.12 Aman Hospital Portal (EHR, team of 2)
+Backend Developer. Stack: Laravel, MySQL, Linux. An Electronic Health Record gateway managing dynamic outpatient appointment flows and patient medical registries. Be ready to explain protection of sensitive data: role-based access, encryption in transit and at rest, audit logs, minimum data exposure in APIs.
+5.13 Personal project: Chat with your own document (Python, RAG)
+Goal
+	A user uploads any multi-page document and asks questions in plain language; answers come within seconds and should be correct, from the document.
+	Pipeline
+	Upload and read the document; chunk it; create embeddings; store for vector search; retrieve the most relevant chunks for each question; an LLM answers from that context.
+	Stack
+	Python. [FILL: LLM and provider, embedding model, vector store, framework, backend/UI, PDF reader.]
+	Lessons
+	Chunking affects quality; retrieval quality matters more than model size; telling the model to say 'not found' beats a confident wrong answer. [CONFIRM they match your experience.]
+	Measure
+	[FILL: response time, how you tested accuracy.]
+	
+
+5.14 Personal project: AI mock interview and learning platform
+What it does
+	Upload a resume, analyze it, run a mock interview based on resume skills, score answers, give AI insights, and offer learn-by-topic practice.
+	Question bank
+	Questions (question, options, answer) are generated by AI with one click and saved in the database.
+	Interview flow
+	The user opens Interviews, selects a skill, clicks Proceed, and the app saves an interview setup with 30 random questions.
+	Status
+	[CONFIRM: built or in progress. Say 'I built' only for what works.]
+	
+
+5.15 Personal project: AI content and video creator (design stage)
+Idea
+	A local AI content creator: upload your own photo, stylize it, choose a content type (lifestyle, blog, beauty, travel, shayari and more), and generate video of at least 15 seconds, vertical short and long-form.
+	Design decisions
+	Python backend; Ollama locally plus OpenRouter APIs (pay as you go); cloud image editing as the main styling path using templates (for example 80s and 90s styles) stored in a prompt table with an optional user prompt; multi-user access with roles (admin, user); output by download and direct upload.
+	Status
+	Design and requirements only, nothing built yet. Say 'I designed the architecture', not 'I built'.
+	
+
+6. Ways of Working
+* Cursor AI daily: it reduces time spent typing code line by line, so you spend more time discussing solutions, checking impact on the system, writing test cases, and prototyping changes in existing code. You read every change, run tests and confirm it fits the architecture before committing.
+* 2-week release cycles with UAT and production testing, and same-day hotfixes.
+* Unclear requirements: ask about edge cases, write down assumptions, build a small first version, show it early, adjust in the next iteration.
+7. Interview Stories (situation, action, result)
+Story
+	Situation and action
+	Result
+	Migration
+	Laravel monolith to NestJS microservices; moved modules while keeping the product live
+	Better response times and throughput [X]
+	Double booking
+	Parallel bookings of one slot; transaction plus optimistic locking
+	No double bookings
+	Timezone fix
+	Timezone ID gave wrong EST/EDT and GMT/BST labels; moved to timezone name as text
+	Correct times and labels in real time; simpler code
+	White-label emails
+	Each client needs its own branding and SMTP; admin-editable templates
+	Clients change emails without a developer or deployment
+	Hotfix
+	A production issue in a 2-week cycle; same-day fix after testing
+	No business impact
+	
+
+8. Honest Answers for Gaps
+Question
+	Honest answer
+	Kubernetes, Kafka?
+	Not hands-on. I use Docker and Jenkins for deployments and I understand queues and message brokers conceptually.
+	Python and ML?
+	Beginner. I use Python for personal RAG projects; my strength is backend engineering, APIs and cloud.
+	React / GraphQL / PostgreSQL / Redis?
+	Not hands-on [update if you have used them]. I work with MySQL, SQL Server and MongoDB and learn new tools quickly.
+	TDD / BDD?
+	I write unit tests alongside code with Jest (basic) and understand red-green-refactor and Given-When-Then; I am building more test-first practice.
+	Production AI experience?
+	My AI work is in personal projects, plus exposure to AI features at WeAce (IDP reports, Nexa Coach).
+	
+
+9. Ready Answers
+* Tell me about yourself: 7+ years in backend and full-stack. Started in 2019 at PrimeITZen with Laravel and CodeIgniter. Since 2022 at WeAce: first 2 years Laravel, then led the NestJS migration; multi-tenant white-label features; calendar sync; booking concurrency; AWS, Docker, Jenkins. Now building RAG skills.
+* Why change: four years at WeAce taught me a lot; I want broader responsibility and learning in cloud architecture and AI features.
+* Strengths: data integrity and reliability, safe migrations, ownership of technical delivery. Weakness: formal test-first practice and Python depth, which I am improving.
+* One sentence: A full-stack developer with 7+ years who builds reliable, scalable backend systems and enjoys learning new technologies like RAG.
+10. Fill-in Checklist (add real facts)
+* Migration: number of modules; response time before and after.
+* Number of corporate clients/tenants; bookings per day or week.
+* Deployment time before and after Jenkins.
+* Calendar sync: webhooks or polling; token handling; rate limits.
+* RAG project: LLM, embedding model, vector store, framework, backend, how you measured accuracy.
+* Which parts of Nexa Coach and the AI IDP you touched.
+* Whether you have used Redis, queues, PostgreSQL or GraphQL.
+Page

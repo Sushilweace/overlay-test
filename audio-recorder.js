@@ -39,6 +39,8 @@ class AudioRecorder {
       }
 
       if (sourceType === 'system') {
+        const audioTrack = displayStream.getAudioTracks()[0];
+        console.log(`[AudioRecorder] Active source: system, track: "${audioTrack?.label}"`);
         this.mediaStream = displayStream;
       } else {
         const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });

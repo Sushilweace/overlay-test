@@ -53,6 +53,25 @@ const recorder = new AudioRecorder((chunk) => {
   window.meetingAssistant.sendAudioChunk(chunk);
 });
 
+// Audio source persistence
+const savedAudioSource = localStorage.getItem('audioSource');
+if (savedAudioSource && ['mic', 'system', 'mixed'].includes(savedAudioSource)) {
+  audioSourceSelect.value = savedAudioSource;
+}
+
+audioSourceSelect.addEventListener('change', async () => {
+  localStorage.setItem('audioSource', audioSourceSelect.value);
+  updateListeningBadge();
+  if (isCurrentlyListening) {
+    try {
+      recorder.stop();
+      await recorder.start(audioSourceSelect.value);
+    } catch (err) {
+      showError(`Audio switch error: ${err.message}`);
+    }
+  }
+});
+
 // Consent notice persistence
 if (localStorage.getItem('meetingConsentAcknowledged') === 'true') {
   consentBanner.classList.add('hidden');
@@ -360,22 +379,37 @@ function applyAiSettings(settings) {
   }
 }
 
-// Incoming IPC Events from Main Bridge
-window.meetingAssistant.onStatusChange(({ listening }) => {
-  isCurrentlyListening = listening;
-  if (listening) {
-    listeningBadge.textContent = 'LISTENING';
+function updateListeningBadge() {
+  if (isCurrentlyListening) {
+    const src = audioSourceSelect.value;
+    if (src === 'system') {
+      listeningBadge.textContent = 'SYSTEM AUDIO';
+      listeningBadge.title = 'Capturing Meeting Call (Windows Loopback - Other participants only)';
+    } else if (src === 'mixed') {
+      listeningBadge.textContent = 'MIC + SYSTEM';
+      listeningBadge.title = 'Capturing both Microphone and Meeting Call';
+    } else {
+      listeningBadge.textContent = 'MIC ONLY';
+      listeningBadge.title = 'Capturing your microphone only';
+    }
     listeningBadge.classList.add('active');
     toggleListeningBtn.textContent = 'Stop Listening';
     toggleListeningBtn.classList.remove('btn-primary');
     toggleListeningBtn.classList.add('btn-danger');
   } else {
     listeningBadge.textContent = 'IDLE';
+    listeningBadge.title = 'Not listening';
     listeningBadge.classList.remove('active');
     toggleListeningBtn.textContent = 'Start Listening';
     toggleListeningBtn.classList.remove('btn-danger');
     toggleListeningBtn.classList.add('btn-primary');
   }
+}
+
+// Incoming IPC Events from Main Bridge
+window.meetingAssistant.onStatusChange(({ listening }) => {
+  isCurrentlyListening = listening;
+  updateListeningBadge();
 });
 
 let aiScrollScheduled = false;

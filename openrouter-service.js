@@ -57,7 +57,7 @@ class OpenRouterService {
     return this.streamMessages({
       systemPrompt: systemPrompt || suggestionSystemPrompt(),
       userContent: suggestionUserContent(recentTranscript),
-      maxTokens: 140,
+      maxTokens: 450,
       onChunk,
       onComplete,
       onError
@@ -79,7 +79,7 @@ class OpenRouterService {
     return this.streamMessages({
       systemPrompt: systemPrompt || suggestionSystemPrompt(),
       userContent: content,
-      maxTokens: 160,
+      maxTokens: 500,
       onChunk,
       onComplete,
       onError

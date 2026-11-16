@@ -149,6 +149,9 @@ class OpenRouterService {
 
       if (!response.ok) {
         const errorText = await response.text();
+        if (response.status === 401) {
+          throw new Error('OpenRouter API key is invalid or revoked (401 User not found). Please paste a new key in Settings (⚙) or .env.');
+        }
         if (response.status === 402) {
           throw new Error('OpenRouter credit limit reached. Switch to "OpenRouter Free Auto-Router" in settings or top up at openrouter.ai/credits.');
         }
